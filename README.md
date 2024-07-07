@@ -1,7 +1,7 @@
 # MobHealthBarsForked
 A Minecraft Plugin Forked from Rooni's MobHealthbars v0.1.5. 
 
-This plugin shows a healthbar when you're in combat with any living creature, including other players.
+MobHealthBarsForked is a Paper Plugin which shows a healthbar when you're in combat with any living creature, including other players.
 
 Features:                       
 When in combat with an enemy, shows a healthbar on the top like you'd see during bosses. This healthbar disappears out of combat or when the target is killed.
