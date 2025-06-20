@@ -3,6 +3,7 @@ package io.github.woundedkoba.mobhealthbarsforked;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.boss.BarColor;
@@ -10,8 +11,10 @@ import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Wither;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -19,18 +22,18 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.jetbrains.annotations.NotNull;
 
 public class MobHealthBarsForked extends JavaPlugin implements Listener {
-  private HashMap<LivingEntity, BossBar> bars = new HashMap<>();
-  private HashMap<Player, BukkitTask> bartasks = new HashMap<>();
+  private final HashMap<LivingEntity, BossBar> bars = new HashMap<>();
+  private final HashMap<Player, BukkitTask> bartasks = new HashMap<>();
   
   public void onEnable() {
     saveDefaultConfig();
-    getServer().getPluginManager().registerEvents(this, (Plugin)this);
+    getServer().getPluginManager().registerEvents(this,this);
   }
   
   public void onDisable() {
@@ -38,35 +41,37 @@ public class MobHealthBarsForked extends JavaPlugin implements Listener {
     this.bartasks.forEach((k, v) -> v.cancel());
   }
   
-  public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+  public boolean onCommand(@NotNull CommandSender sender, Command cmd, @NotNull String label, String @NotNull [] args) {
     if (cmd.getName().equalsIgnoreCase("mobhealthbars")) {
       if (args.length < 1)
-        return false; 
-      switch (args[0]) {
-        case "reload":
+        return false;
+      if (args[0].equals("reload")) {
           reloadConfig();
           sender.sendMessage("Config reloaded.");
-          break;
-      } 
-      return true;
-    } 
+          return true; // Handled successfully
+      }
+      // If subcommand is unknown, return false to show usage
+      return false;
+    }
+    // If command is not mobhealthbars, return false
     return false;
   }
   
   @EventHandler
   public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-    if (event.getDamager() instanceof Player) {
-      if (!(event.getEntity() instanceof LivingEntity))
-        return; 
-      if (event.getEntity() instanceof org.bukkit.entity.Wither)
-        return; 
-      if (event.getEntity() instanceof org.bukkit.entity.EnderDragon)
-        return; 
-      Player player = (Player)event.getDamager();
-      LivingEntity entity = (LivingEntity)event.getEntity();
+    if (event.getDamager() instanceof Player player) {
+      if (!(event.getEntity() instanceof LivingEntity entity))
+        return;
+      if (entity instanceof Wither || entity instanceof EnderDragon)
+        return;
       if (entity == player)
-        return; 
-      double maxhp = entity.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
+        return;
+
+      var attribute = entity.getAttribute(Attribute.MAX_HEALTH);
+      if (attribute == null)
+        return;
+
+      double maxhp = Objects.requireNonNull(entity.getAttribute(Attribute.MAX_HEALTH)).getValue();
       double hp = entity.getHealth() - event.getFinalDamage();
       BossBar bar = this.bars.get(entity);
       if (bar == null) {
@@ -89,11 +94,10 @@ public class MobHealthBarsForked extends JavaPlugin implements Listener {
   
   @EventHandler
   public void onEntityRegainHealth(EntityRegainHealthEvent event) {
-    if (!(event.getEntity() instanceof LivingEntity))
-      return; 
-    LivingEntity entity = (LivingEntity)event.getEntity();
+    if (!(event.getEntity() instanceof LivingEntity entity))
+      return;
     if (this.bars.containsKey(entity)) {
-      double maxhp = entity.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
+      double maxhp = Objects.requireNonNull(entity.getAttribute(Attribute.MAX_HEALTH)).getValue();
       double hp = entity.getHealth() + event.getAmount();
       BossBar bar = this.bars.get(entity);
       bar.setProgress(Math.max(0.0D, Math.min(1.0D, 1.0D / maxhp * hp)));
@@ -102,11 +106,10 @@ public class MobHealthBarsForked extends JavaPlugin implements Listener {
   
   @EventHandler
   public void onMobDamage(EntityDamageEvent event) {
-    if (!(event.getEntity() instanceof LivingEntity))
-      return; 
-    LivingEntity entity = (LivingEntity)event.getEntity();
+    if (!(event.getEntity() instanceof LivingEntity entity))
+      return;
     if (this.bars.containsKey(entity)) {
-      double maxhp = entity.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
+      double maxhp = Objects.requireNonNull(entity.getAttribute(Attribute.MAX_HEALTH)).getValue();
       double hp = entity.getHealth() - event.getFinalDamage();
       BossBar bar = this.bars.get(entity);
       bar.setProgress(Math.max(0.0D, Math.min(1.0D, 1.0D / maxhp * hp)));
@@ -129,7 +132,7 @@ public class MobHealthBarsForked extends JavaPlugin implements Listener {
   public BossBar getBar(LivingEntity entity) {
     BarColor color = BarColor.RED;
     BarStyle style = BarStyle.SOLID;
-    for (String item : getConfig().getConfigurationSection("styles").getKeys(false)) {
+    for (String item : Objects.requireNonNull(getConfig().getConfigurationSection("styles")).getKeys(false)) {
       try {
         if (Class.forName("org.bukkit.entity." + item).isInstance(entity)) {
           String cColor = getConfig().getString("styles." + item + ".color");
@@ -154,7 +157,7 @@ public class MobHealthBarsForked extends JavaPlugin implements Listener {
       task.cancel();
       this.bartasks.remove(player);
     } 
-    BukkitTask newtask = new BarCooldownTask(player).runTaskLater((Plugin)this, delay);
+    BukkitTask newtask = new BarCooldownTask(player).runTaskLater(this, delay);
     this.bartasks.put(player, newtask);
   }
 

@@ -1,0 +1,13 @@
+# How long healthbars stay on screen during combat (in ticks)
+# There's 20 ticks in a second, so 60 would be 3 seconds.
+duration: 60
+
+# Valid bar styles:
+# SOLID, SEGMENTED_6, SEGMENTED_10, SEGMENTED_12, SEGMENTED_20
+# Valid bar colors:
+# PINK, BLUE, RED, GREEN, YELLOW, PURPLE, WHITE;
+styles:
+  Player:
+    color: BLUE
+  Animals:
+    color: GREEN

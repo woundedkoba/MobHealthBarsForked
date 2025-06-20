@@ -1,0 +1,22 @@
+name: MobHealthBarsForked
+version: 0.0.2
+author: WoundedKoba
+api-version: 1.21.5
+main: io.github.woundedkoba.mobhealthbarsforked.MobHealthBarsForked
+
+
+pre_fork_version: 0.1.5
+pre_fork_author: Rooni
+pre_fork_main: com.nekorooni.mobhealthbars.MobHealthbars
+
+database: false
+
+commands:
+  mobhealthbars:
+    description: MobHealthbars commands.
+    aliases: [mhb, healthbars, hb]
+    usage: |
+      MobHealthbars ------
+      this help message
+      reload MobHealthbars config
+    permission: mobhealthbars.admin

@@ -15,7 +15,4 @@ mobhealthbars.admin - Grants permission to use /mobhealthbars
 
 MobHealthBarsForked 0.0.1 was created because the original mod was abandoned and had not been updated since 2017 although it still worked.
 
-Without going into full detail changes include but are not limited to:
-- Upgraded to Java 21
-- Upgraded to Paper API 1.21-R0.1-SNAPSHOT
-- Upgraded to Maven Compiler Plugin 3.13.0
+See docs > Change Log.md for Changes made in each version.
